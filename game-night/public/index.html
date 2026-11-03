@@ -28,6 +28,9 @@
   .name{font-family:"Unbounded",system-ui,sans-serif;font-weight:700;font-size:20px;margin:14px 0 6px}
   .desc{color:var(--mute);font-size:14px;line-height:1.4}
   .soon{opacity:.45;border-style:dashed}
+  .backroom{display:block;min-height:0;margin:-10px 0 18px;border-color:var(--gold);background:rgba(255,209,102,.1)}
+  .backroom[hidden]{display:none}
+  .backroom .name{margin:0 0 4px}
   .pill{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.1);color:var(--mute)}
   footer{color:var(--mute);font-size:13px;margin-top:28px;text-align:center}
 </style>
@@ -36,6 +39,10 @@
 <main>
   <h1>GAME<span>NIGHT</span></h1>
   <p class="tag">Pick a game. Everyone joins on their phone. 🎲</p>
+  <a class="game backroom" id="backroom" href="#" hidden>
+    <div class="name">🎲 Back to room <span id="brcode"></span></div>
+    <div class="desc">Everyone stays together. The host picks the next game.</div>
+  </a>
   <div class="grid">
     <!-- To add a game: copy one of these blocks, point href at the game's folder, change the emoji, name and description. -->
     <a class="game" href="/far-out/">
@@ -65,5 +72,17 @@
   </div>
   <footer>Game Night</footer>
 </main>
+<script>
+  // If you're in a Game Night room, offer the way back to it.
+  try {
+    const s = JSON.parse(localStorage.getItem("gn:session") || "null");
+    if (s && s.code) {
+      const a = document.getElementById("backroom");
+      a.href = "/same-brain/?room=" + encodeURIComponent(s.code);
+      document.getElementById("brcode").textContent = s.code;
+      a.hidden = false;
+    }
+  } catch {}
+</script>
 </body>
 </html>

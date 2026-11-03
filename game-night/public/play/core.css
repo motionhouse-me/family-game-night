@@ -140,3 +140,9 @@ button.small{width:auto;padding:10px 14px;font-size:14px}
 .confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:2px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* game switcher */
+.gswitch{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gpick{border:1.5px solid var(--card-b);border-radius:var(--r-sm);padding:12px 4px;text-align:center;cursor:pointer;background:transparent;color:var(--c-ink);font-weight:700;font-size:13px;line-height:1.2}
+.gpick .e{font-size:28px;display:block;margin-bottom:4px}
+.gpick.on{border-color:var(--accent);background:var(--card-hi);box-shadow:0 0 0 1px var(--accent) inset}

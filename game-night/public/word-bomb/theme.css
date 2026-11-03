@@ -65,7 +65,8 @@ button.ghost,.votebtn,.seg button{text-transform:uppercase;letter-spacing:.04em}
 
 .wbinput{display:flex;gap:8px}
 .wbinput input{text-transform:uppercase;font-family:var(--font-m);font-size:22px;letter-spacing:.12em}
-.wbinput input[readonly]{opacity:.4}
+.wbinput input.waiting{border-color:#2c2e33}
+.wbinput input:not(.waiting){border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,212,0,.35)}
 .wbinput button{width:auto;padding:0 22px}
 .attempt{min-height:22px;text-align:center;font-size:16px;color:var(--mute);margin:10px 0 2px;font-family:var(--font-m)}
 .attempt .bad{color:var(--bad)}

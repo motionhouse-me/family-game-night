@@ -43,11 +43,13 @@ game-night/
 Keep each game's folder name, API path and storage name different, so games never clash with each other.
 Far Out uses `/far-out/`, `/api/far-out` and the Blobs store `far-out-rooms`.
 
-## The three new games
+## One room, all four games
 
-Each game is separate: its own page, its own look, its own room codes. All three work like Far Out:
-the host picks how many rounds, everyone votes 👍 before each round, answers are timed, and the game
-ends with a champion, awards, a 😂 hall of fame and an all-time family leaderboard.
+Create a room in any game and everyone joins with one code. The host switches games from the lobby
+or the final screen, and every phone follows, Far Out included (everyone is joined to a Far Out
+room automatically, without changing Far Out itself). After Far Out, "← All games" → "Back to room".
+Each room keeps its own leaderboard: wins per player across every game played in it.
 
-They share `/api/night`, and each keeps its rooms in its own Blobs store: `same-brain-rooms`,
-`word-bomb-rooms`, `imposter-rooms`. To add prompts or word pairs, edit `lib/content.js` (one per line).
+Same Brain, Word Bomb and The Imposter share `/api/night` and the Blobs store `game-night-rooms`.
+To add prompts or word pairs, edit `lib/content.js` (one per line). Word Bomb's dictionary
+(about 277,000 words, British and American spellings plus modern words) is `lib/words.js`.

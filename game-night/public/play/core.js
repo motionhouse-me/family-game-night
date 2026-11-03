@@ -2,6 +2,12 @@
 // Each game page loads this, then its own game.js which calls GN.start({...}).
 window.GN = (() => {
   const API = "/api/night";
+  const GAMES = {
+    samebrain: { name: "Same Brain", emoji: "🧠", path: "/same-brain/" },
+    wordbomb: { name: "Word Bomb", emoji: "💣", path: "/word-bomb/" },
+    imposter: { name: "The Imposter", emoji: "🕵️", path: "/imposter/" },
+    farout: { name: "Far Out", emoji: "🪐", path: "/far-out/" },
+  };
   let D; // the game definition
   const app = () => document.getElementById("app");
 
@@ -56,7 +62,7 @@ window.GN = (() => {
 
   // ---------- session ----------
   let session = null, state = null, skew = 0, pollTimer = null, curKey = "";
-  const KEY = () => `gn:${D.key}:session`;
+  const KEY = () => "gn:session"; // one room, all three games
   const now = () => Date.now() + skew;
   const player = (id) => state?.players.find((p) => p.id === id);
   const nameOf = (id) => player(id)?.name || "Someone";
@@ -101,8 +107,7 @@ window.GN = (() => {
         </div>
       </div>
       <div class="card how"><h2>${W("howTitle", "How to play")}</h2>${D.how.map((h) => `<p>${h}</p>`).join("")}
-        <p class="small" style="margin-top:12px">${D.min}–30 players · everyone on their own phone</p></div>
-      <div class="card"><h2>${W("boardTitle", "🏆 All-time family leaderboard")}</h2><div id="alltime"><p class="muted small">Loading…</p></div></div>`;
+        <p class="small" style="margin-top:12px">${D.min}–30 players · everyone on their own phone</p></div>`;
     const nm = document.getElementById("nm"), code = document.getElementById("code");
     const rj = document.getElementById("rejoin");
     if (rj) {
@@ -119,14 +124,13 @@ window.GN = (() => {
       const n = getName(); if (!n) return;
       const c = code.value.trim().toUpperCase();
       if (c.length !== 4) { toast("Codes are 4 letters"); code.focus(); return; }
-      try { startSession(await post({ action: "join", name: n, code: c })); } catch (err) { toast(err.status === 404 ? `No ${D.name} room with that code` : err.message); }
+      try { startSession(await post({ action: "join", name: n, code: c })); } catch (err) { toast(err.status === 404 ? "No room with that code" : err.message); }
     };
     document.getElementById("join").onclick = join;
     code.onkeydown = (e) => { if (e.key === "Enter") join(); };
-    loadBoard("#alltime");
   }
 
-  async function loadBoard(sel, limit = 10) {
+  async function loadBoardUnused(sel, limit = 10) {
     try {
       const r = await fetch(`${API}?game=${D.key}&board=1`, { cache: "no-store" }).then((x) => x.json());
       const rows = (r.rows || []).slice(0, limit);
@@ -155,8 +159,8 @@ window.GN = (() => {
   function stopPolling() { clearTimeout(pollTimer); pollTimer = null; }
   function schedule() {
     stopPolling();
-    if (!session) return;
-    let ms = D.fastPhases?.includes(state?.phase) ? 700 : 1500;
+    if (!session || leaving) return;
+    let ms = D.fastPhases?.includes(state?.phase) ? 500 : 1500;
     if (document.hidden) ms = 5000;
     pollTimer = setTimeout(refresh, ms);
   }
@@ -180,6 +184,8 @@ window.GN = (() => {
     if (!session) return;
     if (state && s.v < state.v) return; // older than what we have
     skew = s.now - Date.now();
+    if (s.game === "farout") { state = s; renderFarOut(s); return; }
+    if (s.game !== D.key && GAMES[s.game]) { stopPolling(); session && (location.href = `${GAMES[s.game].path}?room=${s.code}`); session = null; return; }
     const prevPhase = state?.phase;
     state = s;
     render(prevPhase);
@@ -261,6 +267,85 @@ window.GN = (() => {
     tryAct("vote", { yes });
   });
 
+  // ---------- room leaderboard + game switcher ----------
+  function roomBoardCard(s) {
+    const rows = (s.roomBoard || []).filter((r) => r.games > 0);
+    const hist = (s.history || []).slice(-6).reverse();
+    return `<div class="card mt"><h2>${W("roomBoard", "🏆 Room leaderboard")}</h2>
+      ${rows.length ? `<ol class="board">${rows.map((r, i) => {
+        const medals = Object.entries(r.byGame || {}).map(([g, n]) => `${GAMES[g]?.emoji || ""}${n > 1 ? "×" + n : ""}`).join(" ");
+        return `<li class="${i === 0 && r.wins ? "first" : ""} ${r.id === session.id ? "me" : ""}"><span class="rk">${i === 0 && r.wins ? "👑" : i + 1}</span><span class="dot" style="background:${r.color}">${esc((r.name[0] || "?").toUpperCase())}</span><span class="nm">${esc(r.name)}<small>${r.games} game${r.games === 1 ? "" : "s"}${medals ? " · " + medals : ""}</small></span><span class="sc">${r.wins}<small>win${r.wins === 1 ? "" : "s"}</small></span></li>`;
+      }).join("")}</ol>
+      ${hist.length ? `<p class="muted small" style="margin-top:10px">Recent: ${hist.map((h) => `${GAMES[h.game]?.emoji || ""} ${esc(h.champions.join(" & "))}`).join(" · ")}</p>` : ""}`
+      : `<p class="muted small">No games finished in this room yet. The first champion goes here!</p>`}</div>`;
+  }
+  function switcher() {
+    return `<div class="gswitch">${Object.entries(GAMES).map(([k, g]) => `<button class="gpick ${k === D.key ? "on" : ""}" data-switch="${k}"><span class="e">${g.emoji}</span>${g.name}</button>`).join("")}</div>`;
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-switch]"); if (!b || !session || !isHost()) return;
+    const to = b.dataset.switch;
+    if (to === D.key && state?.game !== "farout") return;
+    sheet(`Switch everyone to ${GAMES[to].name}?`, [[`Yes, play ${GAMES[to].name} ${GAMES[to].emoji}`, () => (to === "farout" ? switchToFarOut() : tryAct("switch", { to }))]]);
+  });
+
+  // ---------- Far Out: its own server, joined automatically for everyone in the room ----------
+  async function farOutApi(body) {
+    const res = await fetch("/api/far-out", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ApiError(data.error || "Far Out didn't answer", res.status);
+    return data;
+  }
+  let leaving = false;
+  function goFarOutPage(code) {
+    if (leaving) return;
+    leaving = true;
+    store.set("gn:foSent", code);
+    stopPolling();
+    location.href = `/far-out/?room=${code}`;
+  }
+  async function switchToFarOut() {
+    try {
+      const r = await farOutApi({ action: "create", name: session.name });
+      store.set("farout:session", { code: r.code, id: r.id, secret: r.secret });
+      store.set("farout:name", session.name);
+      store.set("gn:foSent", r.code); // so the state update doesn't send us twice
+      await act("switch", { to: "farout", foCode: r.code });
+      goFarOutPage(r.code);
+    } catch (e) { toast(e.message); }
+  }
+  async function joinFarOut(code) {
+    const fo = store.get("farout:session");
+    if (!fo || fo.code !== code) {
+      const r = await farOutApi({ action: "join", code, name: session.name });
+      store.set("farout:session", { code: r.code, id: r.id, secret: r.secret });
+      store.set("farout:name", session.name);
+    }
+    goFarOutPage(code);
+  }
+  function renderFarOut(s) {
+    const code = s.farOut?.code;
+    if (code && store.get("gn:foSent") !== code) {
+      app().innerHTML = `<div class="center muted" style="margin-top:40vh">🪐 Taking you to Far Out…</div>`;
+      curKey = "farout-go";
+      joinFarOut(code).catch((e) => { toast(e.message); store.set("gn:foSent", code); renderFarOut(state); });
+      return;
+    }
+    if (curKey !== "farout") {
+      curKey = "farout";
+      app().innerHTML = `
+        <div class="topbar"><a class="back" href="/">← Games</a><span class="spacer"></span><span class="chip">${esc(s.code)}</span><button class="iconbtn" id="leavebtn">Leave</button></div>
+        <section class="hero"><div class="logo" style="font-size:64px">🪐</div><div class="kicker">Room ${esc(s.code)}</div><h1 class="logo" style="font-size:40px">Playing Far Out</h1>
+          <p class="tagline">The room is on Far Out right now.</p></section>
+        <button class="btn" id="gofo">Go to Far Out 🚀</button>
+        <div id="fohost"></div><div id="foboard"></div>`;
+      document.getElementById("gofo").onclick = () => joinFarOut(code).catch((e) => toast(e.message));
+      document.getElementById("leavebtn").onclick = () => sheet("Leave this room?", [["Leave", async () => { try { await act("leave"); } catch {} leaveLocal(); }]]);
+    }
+    set("#fohost", isHost() ? `<div class="card mt"><h2>Done with Far Out? Switch game</h2>${switcher()}<p class="muted small" style="margin-top:8px">Everyone in the room comes with you.</p></div>` : `<p class="muted center mt">When ${esc(nameOf(s.hostId))} picks the next game, you'll move automatically.</p>`);
+    set("#foboard", roomBoardCard(s));
+  }
+
   // ---------- lobby ----------
   function renderLobby(view, fresh, s) {
     if (fresh) {
@@ -271,13 +356,15 @@ window.GN = (() => {
           <button class="ghost small" id="invite">${W("invite", "Share invite link")}</button>
         </section>
         <div class="card"><h2 id="pcount"></h2><div class="players" id="plist"></div><p class="muted small" id="hosthint" style="margin-top:10px"></p></div>
+        <div class="card"><h2>Game</h2><div id="gswitch"></div><p class="muted small" id="gswitchhint" style="margin-top:8px"></p></div>
         <div class="card"><h2>${W("settingsTitle", "Game settings")}</h2><div id="gsettings"></div></div>
         <div id="lvote"></div>
         <div id="startarea"></div>
+        <div id="roomboard"></div>
         <div class="card how mt"><h2>${W("howTitle", "How to play")}</h2>${D.how.map((h) => `<p>${h}</p>`).join("")}</div>`;
       document.getElementById("invite").onclick = async () => {
         const url = `${location.origin}${location.pathname}?room=${s.code}`;
-        const text = `Join our ${D.name} game! Code ${s.code}`;
+        const text = `Join our Game Night room! Code ${s.code}`;
         try { if (navigator.share) { await navigator.share({ title: D.name, text, url }); return; } } catch { return; }
         try { await navigator.clipboard.writeText(`${text}: ${url}`); toast("Invite link copied!"); } catch { toast(url); }
       };
@@ -299,6 +386,9 @@ window.GN = (() => {
     st += `<p class="muted small" style="margin-top:10px">${D.roundInfo(s.settings)}</p>`;
     set("#gsettings", st);
     set("#lvote", voteHtml(s));
+    set("#gswitch", isHost() ? switcher() : `<p><b>${GAMES[D.key].emoji} ${esc(D.name)}</b></p>`);
+    set("#gswitchhint", isHost() ? "Tap a game to switch. Everyone stays in the room, no new code needed." : `${esc(nameOf(s.hostId))} picks the game. You'll move with the room automatically.`);
+    set("#roomboard", roomBoardCard(s));
     const enough = s.players.length >= D.min;
     set("#startarea", isHost()
       ? `<button class="btn" id="startbtn" ${enough && s.tally.passed ? "" : "disabled"}>${W("startBtn", "Start")} 🚀</button>${enough ? "" : `<p class="muted small center" style="margin-top:8px">Needs at least ${D.min} players</p>`}`
@@ -352,9 +442,8 @@ window.GN = (() => {
       <div class="card mt">${boardHtml(rows, (r) => `${r.val}`, (r) => rounds.map((x) => `R${x} ${(s.roundScores[x] || {})[r.id] || 0}`).join(" · "))}</div>
       ${s.awards?.length ? `<h2 class="mt">${W("awardsTitle", "Awards")}</h2><div class="awards">${s.awards.map((a) => `<div class="award"><div class="e">${a.emoji}</div><div><div class="t">${esc(a.title)}</div><div class="w">${esc(a.ids.map(nameOf).join(" & "))}</div><div class="x">${esc(a.text)}</div></div></div>`).join("")}</div>` : ""}
       ${s.hof?.length ? `<h2 class="mt">😂 Hall of fame</h2><div class="hof">${s.hof.map((h) => `<div class="item"><div class="ctx">${esc(h.ctx)}</div><div class="txt">“${esc(h.text)}”</div><div class="muted small">— ${esc(nameOf(h.id))} · 😂 ${h.n}</div></div>`).join("")}</div>` : ""}
-      <div class="card mt"><h2>${W("boardTitle", "🏆 All-time family leaderboard")}</h2><div id="alltime"><p class="muted small">Loading…</p></div></div>
-      ${isHost() ? `<button class="btn" id="again">Play again 🔁</button>` : `<p class="muted center">Waiting for ${esc(nameOf(s.hostId))} to start a new game…</p>`}`;
-    loadBoard("#alltime");
+      ${roomBoardCard(s)}
+      ${isHost() ? `<div class="stack"><button class="btn" id="again">Play ${esc(D.name)} again 🔁</button><div class="card" style="margin-top:12px"><h2>Or switch game · everyone stays in the room</h2>${switcher()}</div></div>` : `<p class="muted center">Waiting for ${esc(nameOf(s.hostId))} to pick what's next…</p>`}`;
     const a = document.getElementById("again");
     if (a) a.onclick = () => tryAct("newgame");
     if (fresh && prevPhase && prevPhase !== "final") { confetti(); if ((s.champions || []).includes(session.id)) vibrate([80, 40, 80, 40, 200]); }
@@ -386,6 +475,7 @@ window.GN = (() => {
   }
 
   return {
+    refreshNow: async () => { await refresh(); },
     start, esc, set, show, toast, flash, confetti, vibrate, act, tryAct, sheet, boardHtml, totals, laughBtn,
     player, nameOf, isHost, dot, pill, mini, now, render: () => render(),
     get state() { return state; }, get me() { return session?.id; },

@@ -47,17 +47,27 @@
         <div class="crew" id="crew"></div>
         <div class="card"><h2>Words that saved lives</h2><ul class="feed" id="feed"></ul></div>`;
       const f = document.getElementById("wf"), input = document.getElementById("word");
+      // tapping the button must not close the keyboard
+      f.querySelector("button").addEventListener("pointerdown", (e) => e.preventDefault());
       f.onsubmit = async (e) => {
         e.preventDefault();
-        if (sending || GN.state.wb.turn !== GN.me) return;
+        if (sending) return;
         const w = input.value.trim(); if (!w) return;
         sending = true;
+        // The server decides whose turn it is: send even if this phone hasn't caught up yet.
+        const send = () => act("wb-word", { word: w });
         try {
-          const r = await act("wb-word", { word: w });
+          let r;
+          try { r = await send(); }
+          catch (err) {
+            if (err.status === 409 && /not your turn/i.test(err.message)) { await GN.refreshNow(); if (GN.state?.wb?.turn === GN.me) r = await send(); else throw err; }
+            else throw err;
+          }
           if (r.ok) { input.value = ""; vibrate(15); }
-          else { const d = document.getElementById("device"); d.classList.remove("shake"); void d.offsetWidth; d.classList.add("shake"); vibrate([20, 40, 20]); input.select(); }
-        } catch (err) { toast(err.message); }
+          else { const d = document.getElementById("device"); d.classList.remove("shake"); void d.offsetWidth; d.classList.add("shake"); vibrate([20, 40, 20]); }
+        } catch (err) { toast(/not your turn/i.test(err.message) ? "Not your turn yet — hold that word!" : err.message); }
         sending = false;
+        input.focus();
       };
     }
     const lives = (id) => `<span class="lives">${"❤️".repeat(Math.max(0, wb.lives[id] || 0))}${"🖤".repeat(Math.max(0, wb.startLives - (wb.lives[id] || 0)))}</span>`;
@@ -70,10 +80,13 @@
     const mine = wb.turn === GN.me;
     const turnKey = `${wb.turnNo}:${wb.turn}`;
     const input = document.getElementById("word");
-    if (turnKey !== lastTurnKey) { lastTurnKey = turnKey; if (mine) { input.value = ""; vibrate([60, 30, 60]); } }
-    input.readOnly = !mine;
-    input.placeholder = mine ? `Word with ${wb.syl}…` : wb.order.includes(GN.me) ? (wb.lives[GN.me] > 0 ? "Wait for the bomb…" : "You're out 💀") : "Watching this round";
-    if (mine && document.activeElement !== input && !document.querySelector(".sheet")) input.focus();
+    // The box is never locked, so the keyboard can stay open the whole round.
+    if (turnKey !== lastTurnKey) {
+      lastTurnKey = turnKey;
+      if (mine) { vibrate([60, 30, 60]); if (document.activeElement !== input && !document.querySelector(".sheet")) input.focus(); }
+    }
+    input.classList.toggle("waiting", !mine);
+    input.placeholder = mine ? `Word with ${wb.syl}…` : wb.order.includes(GN.me) ? (wb.lives[GN.me] > 0 ? "Get a word ready…" : "You're out 💀") : "Watching this round";
 
     const at = wb.attempt;
     if (at && at.turnNo === wb.turnNo && !at.ok) set("#attempt", `${esc(nameOf(at.id))}: ${esc(at.word.toUpperCase())} <span class="bad">✗ ${esc(at.reason)}</span>`);

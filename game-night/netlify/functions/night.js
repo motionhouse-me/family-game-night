@@ -1,5 +1,5 @@
 // Game Night — server for Same Brain, Word Bomb and The Imposter.
-// Each game keeps its own rooms (its own Blobs store), so codes never mix.
+// One room (one code) can play all three games: the host switches games and everyone stays in.
 // A room is one blob; every change is read → modify → conditional write
 // (onlyIfMatch), retried on conflict. Timers are enforced lazily: whoever
 // polls after a deadline moves the game on.
@@ -9,7 +9,8 @@ import WORDS_RAW from "../../lib/words.js";
 
 const WORDS = new Set(WORDS_RAW.split("\n"));
 const GAMES = ["samebrain", "wordbomb", "imposter"];
-const STORE = { samebrain: "same-brain-rooms", wordbomb: "word-bomb-rooms", imposter: "imposter-rooms" };
+const SWITCH_TO = [...GAMES, "farout"]; // Far Out runs on its own server; the room just points everyone at it
+const STORE_NAME = "game-night-rooms";
 
 const COLORS = ["#ff7a59", "#ffc83d", "#3ddc97", "#4cc9f0", "#a78bfa", "#ff6fae", "#f4a261", "#2ec4b6",
   "#e76f51", "#90be6d", "#f9844a", "#7aa6ff", "#c77dff", "#ff99c8", "#06d6a0", "#ffd166"];
@@ -35,8 +36,7 @@ const cleanCode = (s) => String(s ?? "").toUpperCase().replace(/[^A-Z]/g, "").sl
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const shuffle = (arr) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const roomKey = (code) => `room/${code}`;
-const BOARD_KEY = "leaderboard/all-time";
-const HISTORY_KEY = "history/used";
+const historyKey = (game) => `history/${game}`;
 
 // ======================================================================
 // Same Brain: answer matching
@@ -388,7 +388,7 @@ function hallOfFame(st) {
 function view(st, meId, now) {
   const v = {
     now, me: meId, code: st.code, game: st.game, hostId: st.hostId, v: st.v, phase: st.phase,
-    settings: st.settings, round: st.round, totalRounds: st.settings.rounds, roundChoices: ROUND_CHOICES[st.game],
+    settings: st.settings, round: st.round, farOut: st.game === "farout" ? st.farOut : null, totalRounds: st.settings.rounds, roundChoices: ROUND_CHOICES[st.game],
     players: st.players.map(({ secret, ...p }) => p),
     scores: st.scores, roundScores: st.roundScores, votes: st.votes, tally: voteTally(st),
   };
@@ -420,6 +420,8 @@ function view(st, meId, now) {
     if (st.phase === "round-end" || st.phase === "final") { out.votes = c.votes; out.imposter = c.imposter; out.common = c.common; out.odd = c.odd; out.outcome = c.outcome; }
     v.im = out;
   }
+  v.roomBoard = Object.entries(st.board || {}).map(([id, e]) => ({ id, ...e })).sort((a, b) => b.wins - a.wins || b.games - a.games);
+  v.history = st.history || [];
   v.laughs = {};
   for (const [k, who] of Object.entries(st.laughs || {})) v.laughs[k] = { n: who.length, mine: who.includes(meId) };
   if (st.phase === "final") {
@@ -461,29 +463,23 @@ async function casUpdate(store, key, fn, init) {
   }
 }
 
-async function recordHistory(store, keys) {
+async function recordHistory(store, game, keys) {
   if (!keys?.length) return;
   const now = Date.now();
-  await casUpdate(store, HISTORY_KEY, (h) => { for (const k of keys) h[k] = now; }, () => ({})).catch(() => {});
+  await casUpdate(store, historyKey(game), (h) => { for (const k of keys) h[k] = now; }, () => ({})).catch(() => {});
 }
 
-async function recordLeaderboard(store, st) {
+// Room leaderboard: wins and games across everything this room has played.
+function recordRoomBoard(st) {
+  st.board = st.board || {};
   const champs = new Set(st.champions || []);
-  await casUpdate(store, BOARD_KEY, (b) => {
-    b.players = b.players || {};
-    for (const p of st.players) {
-      const k = p.name.toLowerCase();
-      const e = (b.players[k] = b.players[k] || { name: p.name, games: 0, wins: 0, points: 0, best: 0 });
-      e.name = p.name;
-      e.games += 1;
-      if (champs.has(p.id)) e.wins += 1;
-      const pts = st.scores[p.id] || 0;
-      e.points += pts;
-      e.best = Math.max(e.best || 0, pts);
-      e.last = Date.now();
-    }
-    b.gamesPlayed = (b.gamesPlayed || 0) + 1;
-  }, () => ({ players: {}, gamesPlayed: 0 })).catch(() => {});
+  for (const p of st.players) {
+    const e = (st.board[p.id] = st.board[p.id] || { name: p.name, color: p.color, games: 0, wins: 0, byGame: {} });
+    e.name = p.name; e.color = p.color;
+    e.games += 1;
+    if (champs.has(p.id)) { e.wins += 1; e.byGame[st.game] = (e.byGame[st.game] || 0) + 1; }
+  }
+  st.history = [...(st.history || []), { game: st.game, champions: [...champs].map((id) => st.players.find((p) => p.id === id)?.name).filter(Boolean) }].slice(-30);
 }
 
 // ======================================================================
@@ -493,14 +489,7 @@ export default async (req) => {
   const url = new URL(req.url);
   try {
     if (req.method === "GET") {
-      const game = url.searchParams.get("game");
-      if (!GAMES.includes(game)) return json({ error: "Unknown game" }, 400);
-      const store = getStore({ name: STORE[game], consistency: "strong" });
-      if (url.searchParams.get("board")) {
-        const b = (await store.get(BOARD_KEY, { type: "json" })) || { players: {}, gamesPlayed: 0 };
-        const rows = Object.values(b.players).sort((x, y) => y.wins - x.wins || y.points - x.points).slice(0, 25);
-        return json({ rows, gamesPlayed: b.gamesPlayed || 0 });
-      }
+      const store = getStore({ name: STORE_NAME, consistency: "strong" });
       const code = cleanCode(url.searchParams.get("code"));
       const id = clean(url.searchParams.get("id"), 20);
       const secret = String(url.searchParams.get("secret") || "");
@@ -514,12 +503,12 @@ export default async (req) => {
 
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
     const body = await req.json().catch(() => ({}));
-    const game = body.game;
-    if (!GAMES.includes(game)) return json({ error: "Unknown game" }, 400);
-    const store = getStore({ name: STORE[game], consistency: "strong" });
+    const store = getStore({ name: STORE_NAME, consistency: "strong" });
     const action = body.action;
 
     if (action === "create") {
+      const game = body.game;
+      if (!GAMES.includes(game)) return json({ error: "Unknown game" }, 400);
       let code = "";
       for (let tries = 0; tries < 30; tries++) {
         code = Array.from({ length: 4 }, () => LETTERS[Math.floor(Math.random() * LETTERS.length)]).join("");
@@ -533,7 +522,7 @@ export default async (req) => {
       st.hostId = host.id;
       st.scores[host.id] = 0;
       await store.setJSON(roomKey(code), st);
-      return json({ code, id: host.id, secret: host.secret, name: host.name });
+      return json({ code, game, id: host.id, secret: host.secret, name: host.name });
     }
 
     const code = cleanCode(body.code);
@@ -543,14 +532,19 @@ export default async (req) => {
         if (st.players.length >= MAX_PLAYERS) fail(409, "Room is full");
         const p = newPlayer(st, body.name);
         if (st.scores[p.id] == null) st.scores[p.id] = 0;
-        return p;
+        return { ...p, game: st.game };
       });
-      return json({ code, id: result.id, secret: result.secret, name: result.name });
+      return json({ code, game: result.game, id: result.id, secret: result.secret, name: result.name });
     }
 
     // site-wide "recently played" list so new rooms keep getting fresh prompts
     const needsHistory = ["start", "sb-next"].includes(action);
-    const usedGlobal = needsHistory ? ((await store.get(HISTORY_KEY, { type: "json" }).catch(() => null)) || {}) : null;
+    let usedGlobal = null, histGame = null;
+    if (needsHistory) {
+      const peek = await store.get(roomKey(code), { type: "json" }).catch(() => null);
+      histGame = peek?.game;
+      if (histGame) usedGlobal = (await store.get(historyKey(histGame), { type: "json" }).catch(() => null)) || {};
+    }
 
     const { st, result, used } = await mutate(store, code, (st, now) => {
       const me = st.players.find((p) => p.id === clean(body.id, 20) && p.secret === body.secret);
@@ -587,6 +581,7 @@ export default async (req) => {
         }
         case "start": {
           hostOnly();
+          if (!GAMES.includes(st.game)) fail(409, "Pick a game first");
           if (st.phase !== "lobby" && st.phase !== "round-end") fail(409, "A round is already running");
           if (st.round >= st.settings.rounds) fail(409, "That was the last round — reveal the champion!");
           if (st.game === "imposter" && st.players.length < 3) fail(409, "The Imposter needs at least 3 players");
@@ -602,11 +597,26 @@ export default async (req) => {
           const best = Math.max(...st.players.map((p) => st.scores[p.id] || 0));
           st.champions = st.players.filter((p) => (st.scores[p.id] || 0) === best).map((p) => p.id);
           st.phase = "final";
-          const record = !st.recorded;
-          st.recorded = true;
-          return { ok: true, record };
+          if (!st.recorded) { recordRoomBoard(st); st.recorded = true; }
+          return { ok: true };
         }
         case "newgame": { hostOnly(); freshGame(st); return { ok: true }; }
+        case "switch": {
+          hostOnly();
+          const g = body.to;
+          if (!SWITCH_TO.includes(g)) fail(400, "Unknown game");
+          if (st.phase !== "lobby" && st.phase !== "final") fail(409, "Finish this game first");
+          if (g === "farout") {
+            const fo = cleanCode(body.foCode);
+            if (fo.length !== 4) fail(400, "Couldn't open a Far Out room — try again");
+            st.farOut = { code: fo, at: now };
+          }
+          st.game = g;
+          if (GAMES.includes(g) && !ROUND_CHOICES[g].includes(st.settings.rounds)) st.settings.rounds = DEFAULT_ROUNDS[g];
+          st.used = [];
+          freshGame(st);
+          return { ok: true };
+        }
         case "laugh": {
           const key = clean(body.key, 60);
           if (!/^(sb:\d+:\d+:[a-z0-9]+|im:\d+:[a-z0-9]+:\d)$/.test(key)) fail(400, "Bad reference");
@@ -710,8 +720,7 @@ export default async (req) => {
       }
     });
 
-    if (used?.length) await recordHistory(store, used);
-    if (action === "finish" && result?.record) await recordLeaderboard(store, st);
+    if (used?.length) await recordHistory(store, st.game, used);
     const meId = clean(body.id, 20);
     return json({ ...(result || {}), state: st.players.some((p) => p.id === meId) ? view(st, meId, Date.now()) : null });
   } catch (e) {
