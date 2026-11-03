@@ -1,0 +1,69 @@
+/* SAME BRAIN — "mind meld": glowing brainwaves, bubbly and synced. */
+:root{
+  --page:#140830; --ink:#fbf4ff; --mute:#c2b3e6; --dim:#7e6fae;
+  --card:rgba(255,255,255,.07); --card-b:rgba(255,140,240,.22); --card-hi:rgba(255,255,255,.11);
+  --accent:#ff5bd8; --accent2:#46ecff;
+  --btn-bg:linear-gradient(95deg,#ff5bd8 0%,#a86bff 50%,#46ecff 100%); --btn-ink:#1a0636;
+  --input-bg:rgba(10,3,30,.55); --input-b:rgba(255,140,240,.3);
+  --gold:#ffe066; --good:#5cf2a8; --bad:#ff5f7e;
+  --r:28px; --r-sm:18px; --sheet-bg:#22104d;
+  --font-d:"Fredoka",system-ui,sans-serif; --font-b:"Nunito",system-ui,sans-serif; --font-m:"Space Mono",ui-monospace,monospace;
+}
+body{background:
+  radial-gradient(700px 500px at 85% -5%,rgba(255,91,216,.32),transparent 60%),
+  radial-gradient(650px 520px at -10% 40%,rgba(70,236,255,.22),transparent 60%),
+  radial-gradient(700px 600px at 60% 115%,rgba(168,107,255,.35),transparent 60%),
+  var(--page);background-attachment:fixed}
+/* drifting brainwave lines */
+.bgfx{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='160' viewBox='0 0 600 160'%3E%3Cpath d='M0 80 Q 37 20 75 80 T 150 80 T 225 80 T 300 80 T 375 80 T 450 80 T 525 80 T 600 80' fill='none' stroke='%23ff5bd8' stroke-width='2' opacity='.6'/%3E%3Cpath d='M0 95 Q 37 140 75 95 T 150 95 T 225 95 T 300 95 T 375 95 T 450 95 T 525 95 T 600 95' fill='none' stroke='%2346ecff' stroke-width='2' opacity='.5'/%3E%3C/svg%3E") 0 30%/600px 160px repeat-x,
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='160' viewBox='0 0 600 160'%3E%3Cpath d='M0 80 Q 37 20 75 80 T 150 80 T 225 80 T 300 80 T 375 80 T 450 80 T 525 80 T 600 80' fill='none' stroke='%23a86bff' stroke-width='2' opacity='.6'/%3E%3C/svg%3E") 0 78%/600px 160px repeat-x;
+  animation:drift 14s linear infinite}
+@keyframes drift{to{background-position:600px 30%,-600px 78%}}
+
+.logo{font-weight:700;letter-spacing:-.01em;background:linear-gradient(95deg,#ff8be6,#c29bff 45%,#7ff3ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 30px rgba(255,91,216,.35))}
+.hero .kicker{color:#ffb3ef}
+h2{font-weight:600}
+button.btn{border-radius:999px;box-shadow:0 10px 30px -10px rgba(255,91,216,.8),0 0 0 1px rgba(255,255,255,.15) inset;font-family:var(--font-d);font-weight:600;letter-spacing:.01em}
+button.ghost,.votebtn{border-radius:999px}
+.chip{font-family:var(--font-d);letter-spacing:.2em}
+.roomcode{font-family:var(--font-d);font-weight:700;background:linear-gradient(95deg,#ff8be6,#7ff3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.card{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+
+/* the pulsing brain */
+.mind{position:relative;width:132px;height:132px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center}
+.mind .core{position:relative;z-index:2;font-size:64px;filter:drop-shadow(0 0 18px rgba(255,91,216,.7))}
+.mind .ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:ring 3s ease-out infinite}
+.mind .ring:nth-child(2){animation-delay:1s;border-color:var(--accent2)}
+.mind .ring:nth-child(3){animation-delay:2s;border-color:#a86bff}
+@keyframes ring{0%{transform:scale(.45);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+.mind.small{width:90px;height:90px}.mind.small .core{font-size:42px}
+
+/* answering */
+.prompt{font-weight:700;text-wrap:balance}
+.prompt-card{position:relative;padding:22px 20px 18px;border-radius:var(--r);background:linear-gradient(135deg,rgba(255,91,216,.16),rgba(70,236,255,.10));border:1.5px solid rgba(255,140,240,.35);box-shadow:0 20px 50px -25px rgba(255,91,216,.6)}
+.prompt-card .qnum{color:#ffb3ef}
+.bar{height:12px;background:rgba(255,255,255,.08)}
+.bar > i{box-shadow:0 0 14px rgba(255,91,216,.8)}
+.syncing{display:flex;flex-wrap:wrap;gap:8px}
+.syncing .pl.done{border-color:var(--good);box-shadow:0 0 12px -2px rgba(92,242,168,.6)}
+
+/* reveal */
+.group{position:relative;border-radius:22px;padding:14px 16px;margin-bottom:10px;background:var(--card);border:1.5px solid var(--card-b);color:var(--c-ink);overflow:hidden}
+.group.tap{cursor:pointer}
+.group.sel{outline:3px solid var(--gold)}
+.group.top{border-color:transparent;background:linear-gradient(var(--page),var(--page)) padding-box,linear-gradient(95deg,#ff5bd8,#a86bff,#46ecff) border-box;border:2px solid transparent;animation:glow 2.2s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 28px -4px rgba(255,91,216,.65)}}
+.group .gtop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.group .ans{font-family:var(--font-d);font-weight:700;font-size:22px;word-break:break-word}
+.group .cnt{font-family:var(--font-d);font-weight:700;font-size:15px;padding:4px 12px;border-radius:999px;background:linear-gradient(95deg,#ff5bd8,#46ecff);color:#1a0636;flex:none}
+.group.solo .cnt{background:rgba(255,255,255,.1);color:var(--mute)}
+.group .who{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.group .meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--mute);font-weight:700}
+.group .sync{font-family:var(--font-m);font-size:11px;letter-spacing:.2em;color:#7ff3ff}
+.myresult{text-align:center;padding:18px 12px;border-radius:var(--r);margin-bottom:12px;background:linear-gradient(135deg,rgba(92,242,168,.16),rgba(70,236,255,.10));border:1.5px solid rgba(92,242,168,.45)}
+.myresult.zero{background:rgba(255,255,255,.05);border-color:var(--card-b)}
+.myresult .big{font-family:var(--font-d);font-weight:700;font-size:40px;line-height:1}
+.myresult .sub{color:var(--mute);margin-top:6px;font-weight:700}
+.board .sc{font-family:var(--font-d)}
+.champ .who{background:linear-gradient(95deg,#ff8be6,#7ff3ff);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}

@@ -1,0 +1,94 @@
+/* THE IMPOSTER — noir detective: smoky office, manila case files, typewriter, red stamps. */
+:root{
+  --page:#121110; --ink:#ece2c9; --mute:#a99d84; --dim:#6d6455;
+  --card:#e7d6a8; --card-b:#c9b27c; --card-hi:#efe2bd;
+  --c-ink:#2a2117; --c-mute:#6e5c42;
+  --accent:#b3261e; --accent2:#7e1812;
+  --btn-bg:#b3261e; --btn-ink:#f6ecd4;
+  --input-bg:#f7eed6; --input-ink:#2a2117; --input-b:#b89f6a;
+  --gold:#d4a017; --good:#2e7d32; --bad:#b3261e;
+  --r:6px; --r-sm:4px; --sheet-bg:#e7d6a8;
+  --font-d:"Special Elite","Courier New",monospace; --font-b:"Courier Prime","Courier New",monospace; --font-m:"Special Elite","Courier New",monospace;
+}
+body{background:
+  radial-gradient(600px 420px at 50% -5%,rgba(255,214,140,.16),transparent 70%),
+  radial-gradient(1200px 800px at 50% 50%,transparent 40%,rgba(0,0,0,.75) 100%),
+  repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0 2px,transparent 2px 6px),
+  #171513}
+/* venetian-blind light across the room */
+.bgfx{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background:repeating-linear-gradient(-28deg,transparent 0 46px,rgba(255,220,160,.05) 46px 70px);mask-image:linear-gradient(180deg,#000,transparent 70%);-webkit-mask-image:linear-gradient(180deg,#000,transparent 70%)}
+
+.hero .kicker{color:#c9a96a;letter-spacing:.35em}
+.logo{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:900;color:#f3e7c9;letter-spacing:-.01em;text-shadow:0 4px 30px rgba(0,0,0,.8)}
+.logo small{display:block;font-family:var(--font-d);font-style:normal;font-weight:400;font-size:.32em;letter-spacing:.5em;color:#c9a96a;margin-bottom:6px}
+.tagline{font-family:var(--font-b);color:#c8bba0}
+.topbar .back{color:#c9a96a}
+.chip{background:#e7d6a8;color:#2a2117;border-color:#c9b27c;border-radius:3px}
+.iconbtn{background:transparent;color:#c9a96a;border-color:#4a4134;border-radius:3px}
+
+/* manila folder cards */
+.card{position:relative;margin-top:22px;box-shadow:0 14px 30px -12px rgba(0,0,0,.8),inset 0 0 40px rgba(140,100,40,.18);border-radius:2px 6px 6px 6px}
+.card::before{content:"";position:absolute;top:-16px;left:0;width:120px;height:17px;background:var(--card);border:1px solid var(--card-b);border-bottom:0;border-radius:6px 10px 0 0}
+.card h2{font-family:var(--font-d);font-weight:400;text-transform:uppercase;letter-spacing:.08em;font-size:17px;border-bottom:1.5px dashed #b89f6a;padding-bottom:8px}
+h2{font-family:var(--font-d);font-weight:400}
+button.btn{font-family:var(--font-d);font-weight:400;text-transform:uppercase;letter-spacing:.14em;border-radius:3px;box-shadow:0 3px 0 #5e120d,0 10px 20px -8px rgba(0,0,0,.8)}
+button.ghost,.votebtn,.seg button{border-radius:3px;font-family:var(--font-d);font-weight:400;letter-spacing:.06em}
+.hero button.ghost{color:#ece2c9;border-color:#4a4134}
+.pl,.mini{border-radius:3px;background:#f3e7c4;border-color:#c9b27c;color:#2a2117}
+.board li{border-bottom:1px dashed #b89f6a}
+.board .sc,.board .rk{font-family:var(--font-d)}
+.roomcode{font-family:var(--font-d);color:#f3e7c9;letter-spacing:.3em}
+.waitline{color:#c9a96a}
+.qnum{color:#c9a96a}
+.secs{color:#ece2c9}
+.bar{background:rgba(255,255,255,.08);border-radius:2px;height:8px}
+.bar > i{background:#b3261e;border-radius:2px}
+.banner{background:#f3e7c4;border-color:#b3261e;color:#2a2117}
+.award,.hof .item{border-radius:3px}
+.laugh{border-color:#b89f6a;color:#6e5c42}
+
+/* stamp */
+.stamp{display:inline-block;font-family:var(--font-d);text-transform:uppercase;letter-spacing:.12em;color:#b3261e;border:3px solid #b3261e;padding:6px 14px;border-radius:4px;transform:rotate(-6deg);opacity:.9;
+  mask-image:radial-gradient(circle at 30% 40%,#000 60%,rgba(0,0,0,.7) 75%);-webkit-mask-image:radial-gradient(circle at 30% 40%,#000 60%,rgba(0,0,0,.7) 75%)}
+.stamp.big{font-size:clamp(17px,5.6vw,24px);padding:8px 14px;border-width:4px;max-width:88vw;white-space:nowrap}
+.stamp.green{color:#2e7d32;border-color:#2e7d32}
+.stamp.slam{animation:slam .45s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes slam{0%{transform:scale(2.6) rotate(-6deg);opacity:0}100%{transform:scale(1) rotate(-6deg);opacity:.9}}
+
+/* hero art */
+.lens{width:150px;margin:0 auto;display:block;filter:drop-shadow(0 12px 30px rgba(0,0,0,.8))}
+
+/* secret word dossier */
+.dossier{position:relative;background:#f1e4bf;color:#2a2117;border:1px solid #c9b27c;border-radius:3px;padding:18px 16px 16px;margin:6px 0 16px;box-shadow:0 14px 30px -12px rgba(0,0,0,.8),inset 0 0 40px rgba(140,100,40,.2);cursor:pointer;user-select:none;text-align:center}
+.dossier .clip{position:absolute;top:-12px;left:24px;width:16px;height:40px;border:3px solid #9aa0a6;border-radius:8px;border-bottom-color:transparent}
+.dossier .lab{font-family:var(--font-d);font-size:12px;letter-spacing:.25em;color:#6e5c42;text-transform:uppercase}
+.dossier .word{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:900;font-size:clamp(32px,11vw,46px);margin:8px 0 4px;position:relative;display:inline-block}
+.dossier.hide .word::after{content:"";position:absolute;inset:-4px -10px;background:#111;transform:rotate(-1deg)}
+.dossier .stamp{position:absolute;right:10px;top:10px;font-size:11px;padding:3px 8px;border-width:2px}
+.dossier .hint{font-size:12px;color:#6e5c42}
+
+/* suspects board */
+.suspects{list-style:none;display:grid;gap:10px}
+.suspect{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#f3e7c4;color:#2a2117;border:1px solid #c9b27c;border-radius:3px;box-shadow:0 8px 16px -10px rgba(0,0,0,.8)}
+.suspect.tap{cursor:pointer}
+.suspect.voted{outline:3px solid #b3261e}
+.suspect.guilty{background:#f1d0c5;outline:3px solid #b3261e}
+.mug{width:46px;height:52px;flex:none;border-radius:2px;display:flex;align-items:flex-end;justify-content:center;font:900 22px "Playfair Display",Georgia,serif;color:#fff;position:relative;overflow:hidden;
+  background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.35) 0 1px,transparent 1px 8px)}
+.mug span{margin-bottom:6px;text-shadow:0 2px 3px rgba(0,0,0,.5)}
+.suspect .info{flex:1;min-width:0}
+.suspect .nm{font-family:var(--font-d);font-size:16px}
+.suspect .clues{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.suspect .clues span{font-family:var(--font-b);font-weight:700;font-size:14px;padding:2px 8px;border-radius:2px;background:#fffaf0;border:1px solid #c9b27c}
+.suspect .clues span.pending{opacity:.45}
+.suspect .vc{font-family:var(--font-d);font-size:20px;color:#b3261e;min-width:22px;text-align:right}
+.verdict{text-align:center;margin:10px 0 6px;overflow:hidden;padding:8px 0}
+button.ghost{border-color:#4a4134}
+.card button.ghost,.sheet button.ghost{border-color:#b89f6a}
+.verdict .head{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:900;font-size:clamp(26px,8vw,36px);line-height:1.1;margin-top:16px;color:#f3e7c9}
+.verdict .words{margin-top:10px;color:#c8bba0;font-size:16px}
+.verdict .words b{color:#f3e7c9}
+.champ .who{font-family:"Playfair Display",Georgia,serif;font-style:italic;color:#f3e7c9}
+.flashmsg > div{font-family:var(--font-d);background:#f1e4bf;color:#b3261e;border:4px solid #b3261e;border-radius:4px;transform:rotate(-5deg)}
+.sheet .panel{border-radius:4px 4px 0 0}

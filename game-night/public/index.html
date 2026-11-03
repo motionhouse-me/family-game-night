@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Game Night</title>
+<meta name="description" content="Pick a game and play together.">
+<meta name="theme-color" content="#0b0820">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0b0820;--bg2:#1a1145;--card:rgba(255,255,255,.06);--card-b:rgba(255,255,255,.12);--ink:#f4f1ff;--mute:#a9a3cf;--gold:#ffd166;--pink:#ff6b9d;--violet:#9b8cff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:#1a1145}
+  body{font-family:"DM Sans",system-ui,sans-serif;color:var(--ink);min-height:100dvh;
+    background:radial-gradient(1000px 600px at 90% -10%,#3a1d7a 0%,transparent 60%),radial-gradient(800px 500px at -10% 110%,#5b1748 0%,transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2));background-attachment:fixed}
+  main{max-width:640px;margin:0 auto;padding:40px 16px 60px}
+  h1{font-family:"Unbounded",system-ui,sans-serif;font-weight:900;font-size:clamp(48px,14vw,84px);line-height:.9;letter-spacing:-.03em}
+  h1 span{display:block;background:linear-gradient(90deg,var(--gold),var(--pink) 60%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tag{color:var(--mute);font-size:18px;margin:14px 0 30px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:420px){.grid{grid-template-columns:1fr}}
+  .game{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--card-b);border-radius:22px;padding:20px;min-height:170px;transition:transform .12s,border-color .12s}
+  a.game:hover{transform:translateY(-3px);border-color:var(--gold)}
+  .emoji{font-size:44px;line-height:1}
+  .name{font-family:"Unbounded",system-ui,sans-serif;font-weight:700;font-size:20px;margin:14px 0 6px}
+  .desc{color:var(--mute);font-size:14px;line-height:1.4}
+  .soon{opacity:.45;border-style:dashed}
+  .pill{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.1);color:var(--mute)}
+  footer{color:var(--mute);font-size:13px;margin-top:28px;text-align:center}
+</style>
+</head>
+<body>
+<main>
+  <h1>GAME<span>NIGHT</span></h1>
+  <p class="tag">Pick a game. Everyone joins on their phone. 🎲</p>
+  <div class="grid">
+    <!-- To add a game: copy one of these blocks, point href at the game's folder, change the emoji, name and description. -->
+    <a class="game" href="/far-out/">
+      <div class="emoji">🪐</div>
+      <div class="name">Far Out</div>
+      <div class="desc">Same prompts for everyone. The rarer your answer, the farther you fly.</div>
+      <span class="pill">Up to 30 players</span>
+    </a>
+    <a class="game" href="/same-brain/">
+      <div class="emoji">🧠</div>
+      <div class="name">Same Brain</div>
+      <div class="desc">Same prompt for everyone. Match the family's answer to score.</div>
+      <span class="pill">2–30 players</span>
+    </a>
+    <a class="game" href="/word-bomb/">
+      <div class="emoji">💣</div>
+      <div class="name">Word Bomb</div>
+      <div class="desc">Type a word with the letters on the bomb before it blows up.</div>
+      <span class="pill">2–30 players</span>
+    </a>
+    <a class="game" href="/imposter/">
+      <div class="emoji">🕵️</div>
+      <div class="name">The Imposter</div>
+      <div class="desc">One of you has a different secret word. Find them.</div>
+      <span class="pill">3–30 players</span>
+    </a>
+  </div>
+  <footer>Game Night</footer>
+</main>
+</body>
+</html>

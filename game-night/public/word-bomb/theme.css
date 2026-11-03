@@ -1,0 +1,90 @@
+/* WORD BOMB — "defusal": hazard stripes, metal panels, red LED countdown. */
+:root{
+  --page:#0c0c0e; --ink:#f2f2ee; --mute:#9a9a92; --dim:#5c5c58;
+  --card:#16171a; --card-b:#2c2e33; --card-hi:#1e2024;
+  --accent:#ffd400; --accent2:#ff8a00;
+  --btn-bg:linear-gradient(180deg,#ffe14d,#ffc400); --btn-ink:#111;
+  --input-bg:#0a0a0b; --input-b:#3a3c42;
+  --gold:#ffd400; --good:#39ff6a; --bad:#ff2a2a; --led:#ff2a2a;
+  --r:10px; --r-sm:8px; --sheet-bg:#16171a;
+  --font-d:"Black Ops One",Impact,system-ui,sans-serif; --font-b:"Barlow Semi Condensed",system-ui,sans-serif; --font-m:"Share Tech Mono",ui-monospace,monospace;
+}
+body{background:
+  radial-gradient(800px 500px at 50% -10%,rgba(255,140,0,.12),transparent 60%),
+  linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px) 0 0/28px 28px,
+  linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px) 0 0/28px 28px,
+  var(--page);font-weight:600}
+/* hazard tape top and bottom */
+.bgfx{position:fixed;inset:0;pointer-events:none;z-index:0}
+.bgfx::before,.bgfx::after{content:"";position:absolute;left:0;right:0;height:10px;background:repeating-linear-gradient(-45deg,#ffd400 0 14px,#111 14px 28px);opacity:.9}
+.bgfx::before{top:0}
+.bgfx::after{bottom:0}
+body.alarm .bgfx{animation:alarm .5s steps(2) infinite}
+@keyframes alarm{50%{background:rgba(255,0,0,.12)}}
+main{padding-top:24px}
+
+.logo{font-weight:400;letter-spacing:.02em;color:#fff;text-shadow:0 0 0 #000,3px 3px 0 #b30000}
+.logo em{font-style:normal;color:var(--accent);text-shadow:3px 3px 0 #7a4b00}
+.hero .kicker{color:var(--accent)}
+h2{font-weight:400;letter-spacing:.04em;text-transform:uppercase;font-size:17px}
+.card{position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 8px 20px -10px #000;
+  background-image:radial-gradient(circle at 10px 10px,#3a3c42 2.5px,transparent 3px),radial-gradient(circle at calc(100% - 10px) 10px,#3a3c42 2.5px,transparent 3px),radial-gradient(circle at 10px calc(100% - 10px),#3a3c42 2.5px,transparent 3px),radial-gradient(circle at calc(100% - 10px) calc(100% - 10px),#3a3c42 2.5px,transparent 3px)}
+button.btn{font-family:var(--font-d);font-weight:400;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 4px 0 #9a7600,0 10px 24px -8px rgba(255,196,0,.5)}
+button.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #9a7600}
+button.ghost,.votebtn,.seg button{text-transform:uppercase;letter-spacing:.04em}
+.roomcode{font-family:var(--font-m);color:var(--led);text-shadow:0 0 12px rgba(255,42,42,.8);background:#1a0606;border:2px solid #3a0f0f;border-radius:8px;padding:12px 0;letter-spacing:.3em}
+.chip{color:var(--led);border-color:#3a0f0f;background:#1a0606}
+.pl{border-radius:6px}
+.mini{border-radius:6px}
+
+/* hero bomb art */
+.device-art{width:180px;margin:0 auto 4px;display:block;filter:drop-shadow(0 10px 30px rgba(255,42,42,.25))}
+.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
+
+/* the device */
+.device{position:relative;background:#1b1c20;border:2px solid #34363c;border-radius:14px;padding:16px;margin:4px 0 14px;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.06),0 18px 40px -16px #000}
+.device .wires{position:absolute;left:-6px;right:-6px;top:-18px;height:30px;pointer-events:none}
+.screen{background:#0d0303;border:2px solid #3a0f0f;border-radius:10px;padding:14px 12px 12px;text-align:center;box-shadow:inset 0 0 30px rgba(255,0,0,.12)}
+.screen .lab{font-family:var(--font-m);font-size:11px;letter-spacing:.3em;color:#7a2a2a}
+.screen .syl{font-family:var(--font-m);font-size:64px;line-height:1.05;color:#ffb000;text-shadow:0 0 16px rgba(255,176,0,.75);letter-spacing:.12em}
+.screen .clock{font-family:var(--font-m);font-size:30px;color:var(--led);text-shadow:0 0 12px rgba(255,42,42,.9);margin-top:2px}
+.segs{display:flex;gap:4px;margin-top:12px}
+.segs i{flex:1;height:10px;border-radius:2px;background:#39ff6a;box-shadow:0 0 8px rgba(57,255,106,.6);transition:background .2s}
+.segs i.off{background:#1f2a22;box-shadow:none}
+.segs.warn i:not(.off){background:#ffb000;box-shadow:0 0 8px rgba(255,176,0,.7)}
+.segs.crit i:not(.off){background:#ff2a2a;box-shadow:0 0 8px rgba(255,42,42,.8)}
+.device.hot{animation:hot .25s infinite}
+@keyframes hot{50%{transform:translateX(1px) rotate(.3deg)}}
+.device.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.holder{font-family:var(--font-d);font-size:22px;text-align:center;margin:12px 0 0;letter-spacing:.03em;min-height:1.3em}
+.holder.mine{color:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.6}}
+
+.wbinput{display:flex;gap:8px}
+.wbinput input{text-transform:uppercase;font-family:var(--font-m);font-size:22px;letter-spacing:.12em}
+.wbinput input[readonly]{opacity:.4}
+.wbinput button{width:auto;padding:0 22px}
+.attempt{min-height:22px;text-align:center;font-size:16px;color:var(--mute);margin:10px 0 2px;font-family:var(--font-m)}
+.attempt .bad{color:var(--bad)}
+.attempt .good{color:var(--good)}
+.crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:2px 0 14px}
+.crew .m{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--card);border:1.5px solid var(--card-b);font-weight:700;font-size:15px;min-width:0}
+.crew .m span.n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crew .m.turn{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset,0 0 18px -4px rgba(255,212,0,.6)}
+.crew .m.out{opacity:.3}
+.crew .m.out .n{text-decoration:line-through}
+.crew .m.me .n{color:var(--accent)}
+.lives{font-size:11px;letter-spacing:-1px;flex:none}
+.feed{list-style:none;font-size:15px;color:var(--mute)}
+.feed li{padding:6px 0;border-bottom:1px dashed #2c2e33;display:flex;gap:8px;align-items:baseline}
+.feed b{color:var(--ink)}
+.feed .w{font-family:var(--font-m);color:#ddd;letter-spacing:.06em;font-size:17px}
+.feed .w mark{background:none;color:var(--accent)}
+.boomfx{position:fixed;inset:0;pointer-events:none;z-index:48;background:radial-gradient(circle,#fff 0%,#ffb000 25%,#ff2a2a 55%,transparent 75%);animation:boomfx .7s forwards}
+@keyframes boomfx{0%{opacity:0;transform:scale(.3)}15%{opacity:1}100%{opacity:0;transform:scale(1.6)}}
+.flashmsg > div{font-family:var(--font-d);border-color:var(--bad);background:#1a0606;color:#fff;text-shadow:3px 3px 0 #b30000}
+.places .pl1{font-size:26px}
+.champ .who{color:var(--accent);text-shadow:3px 3px 0 #7a4b00}

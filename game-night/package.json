@@ -1,0 +1,10 @@
+{
+  "name": "game-night",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Family Game Night: Same Brain, Word Bomb, The Imposter, and Far Out.",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.7"
+  }
+}
